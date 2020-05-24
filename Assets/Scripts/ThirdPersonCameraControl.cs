@@ -10,24 +10,33 @@ public class ThirdPersonCameraControl : MonoBehaviour
 
     public Transform Obstruction;
     float zoomSpeed = 2f;
+    int timer = 100;
 
     bool look = true;
+    bool lookpress = false;
+    bool ylook = false;
+
+    public AudioSource asrc;
+    public AudioClip camerain;
+    public AudioClip cameraout;
     
     void Start() {
         Obstruction = Target;
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
+        asrc = GetComponent<AudioSource>();
     }
 
     private void LateUpdate() {
         CamControl();
-        ViewObstructed();
+        // ViewObstructed();
     }
     
 
     void CamControl() {
         mouseX += Input.GetAxis("Mouse X") * rotationSpeed + incrementX;
         mouseY -= Input.GetAxis("Mouse Y") * rotationSpeed;
+        mouseY = Mathf.Clamp(mouseY, -60, 60);
         if (look)
             mouseXInterpolated = mouseXInterpolated - (mouseXInterpolated - mouseX) * (4f * Time.deltaTime);
         else
@@ -40,16 +49,40 @@ public class ThirdPersonCameraControl : MonoBehaviour
 
 
         Player.rotation = Quaternion.Euler(0, mouseX, 0);
-        Target.rotation = Quaternion.Euler(0 - Player.position.y / 2, mouseXInterpolated, 0);
+        if (!ylook)
+            Target.rotation = Quaternion.Euler(0 - Player.position.y / 2, mouseXInterpolated, 0);
+        else 
+            Target.rotation = Quaternion.Euler(mouseY, mouseXInterpolated, 0);
 
-        // aaaaa how to do this
-        /*if (look)
-            transform.positions.Translate(transform.positions.x, transform.positions.y, (transform.position.z - 7f) * (4f * Time.deltaTime));
-        else
-            transform.positions.Translate(transform.positions.x, transform.positions.y, (transform.position.z - 0f) * (4f * Time.deltaTime));*/
+        if (!look && timer >= 35) {
+            ylook = true;
+        }
 
-        if (Input.GetKey(KeyCode.Mouse1)) {
+        // placeholder without delta timing
+        if (!look && timer < 35) {
+            transform.Translate(0, 0, 0.2f);
+            timer++;
+        } else if (timer < 35) {
+            transform.Translate(0, 0, -0.2f);
+            timer++;
+            ylook = false;
+        }
+
+        /*if (transform.position.z < 0f)
+            transform.Translate(0, 0, 0.1f);*/
+
+        if (Input.GetKey(KeyCode.Mouse1) && !lookpress) {
+            if (look)
+                asrc.PlayOneShot(camerain);
+            else
+                asrc.PlayOneShot(cameraout);
             look = !look;
+            lookpress = true;
+            timer = 0;
+        }
+
+        if (!Input.GetKey(KeyCode.Mouse1) && lookpress) {
+            lookpress = false;
         }
 
         // Player.rotation = Player.rotation - (pRotation - Player.rotation) * 0.1;
