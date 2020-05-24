@@ -92,8 +92,7 @@ public class ThirdPersonCameraControl : MonoBehaviour
     private void Update() {
         incrementX = 0;
 		//Third person view rotating
-		if (look)
-		{
+		if (look) {
 			if (Input.GetKey("a")) {
 				incrementX -= 145 * Time.deltaTime;
 			}
